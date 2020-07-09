@@ -22,11 +22,14 @@ let uid = 0
  * A watcher parses an expression, collects dependencies,
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
+ * 一个 观察者 对应 一个 表达式，收集依赖关系，
+ * 并在表达式值更改时触发回调
+ * 它同时用于 $watch() api 和 指令
  */
 export default class Watcher {
-  vm: Component;
-  expression: string;
-  cb: Function;
+  vm: Component; // 组件实例
+  expression: string; 
+  cb: Function; 
   id: number;
   deep: boolean;
   user: boolean;
@@ -50,14 +53,16 @@ export default class Watcher {
     isRenderWatcher?: boolean
   ) {
     this.vm = vm
+    // 是否是对应渲染函数的观察者
     if (isRenderWatcher) {
       vm._watcher = this
     }
+
     vm._watchers.push(this)
     // options
     if (options) {
       this.deep = !!options.deep
-      this.user = !!options.user
+      this.user = !!options.user // 标记是否是框架使用者创建的watch， 而非框架创建的
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -76,6 +81,7 @@ export default class Watcher {
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    // getter的解析表达式
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
@@ -97,6 +103,7 @@ export default class Watcher {
 
   /**
    * Evaluate the getter, and re-collect dependencies.
+   * 计算getter，并重新收集依赖项。
    */
   get () {
     pushTarget(this)
@@ -113,7 +120,9 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
+      // “touch”每个属性，以便它们都作为依赖项进行跟踪以进行深入观察
       if (this.deep) {
+        // 递归地遍历一个对象以调用所有已转换的getter，因此对象中的每个嵌套属性都作为“深层”依赖项收集
         traverse(value)
       }
       popTarget()
@@ -138,6 +147,7 @@ export default class Watcher {
 
   /**
    * Clean up for dependency collection.
+   * 清理依赖项集合。
    */
   cleanupDeps () {
     let i = this.deps.length
@@ -175,6 +185,8 @@ export default class Watcher {
   /**
    * Scheduler job interface.
    * Will be called by the scheduler.
+   * 调度程序作业接口
+   * 将由调度程序调用
    */
   run () {
     if (this.active) {
@@ -184,6 +196,7 @@ export default class Watcher {
         // Deep watchers and watchers on Object/Arrays should fire even
         // when the value is the same, because the value may
         // have mutated.
+        // 即使在值相同的情况下，深层观察者和对象/数组上的观察者也应激发，因为该值可能已发生变化。
         isObject(value) ||
         this.deep
       ) {

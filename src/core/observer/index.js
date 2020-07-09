@@ -21,6 +21,7 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 /**
  * In some cases we may want to disable observation inside a component's
  * update computation.
+ * 在某些情况下，我们可能希望禁用组件更新计算中的观察。
  */
 export let shouldObserve: boolean = true
 
@@ -33,16 +34,21 @@ export function toggleObserving (value: boolean) {
  * object. Once attached, the observer converts the target
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
+ * 附加到每个被观察对象的观察者类。
+ * 附加后，观察者将目标对象的属性键转换为getter/setter，
+ * 收集依赖项并发送更新。
  */
 export class Observer {
   value: any;
   dep: Dep;
-  vmCount: number; // number of vms that have this object as root $data
+  vmCount: number; // 对象作为 根$data 的 vm数量 number of vms that have this object as root $data 
 
   constructor (value: any) {
     this.value = value
+    // 创建依赖收集器
     this.dep = new Dep()
     this.vmCount = 0
+    // 标记__ob__
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
       if (hasProto) {
@@ -106,20 +112,30 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * 尝试为值创建observe实例
+ * 如果观察成功，则返回新的观察者
+ * 或者现有的观察者（如果值已经有）
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
-  if (!isObject(value) || value instanceof VNode) {
+    if (!isObject(value) || value instanceof VNode) {
+    // 判断是否是对象 或者 vnode
     return
   }
   let ob: Observer | void
+  // 判断是否已经存在observe实例
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
   } else if (
-    shouldObserve &&
-    !isServerRendering() &&
-    (Array.isArray(value) || isPlainObject(value)) &&
-    Object.isExtensible(value) &&
-    !value._isVue
+    // 是否应该创建
+    shouldObserve && 
+    // 非服务端渲染
+    !isServerRendering() && 
+    // 数组或者普通对象
+    (Array.isArray(value) || isPlainObject(value)) && 
+    // 可拓展的
+    Object.isExtensible(value) && 
+    // 非vue对象
+    !value._isVue 
   ) {
     ob = new Observer(value)
   }
@@ -137,31 +153,43 @@ export function defineReactive (
   key: string,
   val: any,
   customSetter?: ?Function,
-  shallow?: boolean
+  shallow?: boolean // 浅数据结构
 ) {
+    // 创建依赖收集器
   const dep = new Dep()
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
+      // 不可配置
     return
   }
 
   // cater for pre-defined getter/setters
+  // 存储原getter setter
   const getter = property && property.get
   const setter = property && property.set
+  // 处理没传入初始值 val
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
 
+  // 给子属性创建 observe 
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+        
+      // obj[key] 在被获取时会存储wathcer 到 Dep.target， 
+      // 然后调用  obj[key] 以触发本get方法 做 依赖收集
+      // 如果本次获取是为了做依赖收集
       if (Dep.target) {
+        // 依赖收集
         dep.depend()
+        // 如果 子属性也有 observe
         if (childOb) {
+        debugger
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)

@@ -8,6 +8,7 @@ import Vue from './runtime/index'
 import { query } from './util/index'
 import { compileToFunctions } from './compiler/index'
 import { shouldDecodeNewlines, shouldDecodeNewlinesForHref } from './util/compat'
+debugger
 
 const idToTemplate = cached(id => {
   const el = query(id)
@@ -31,10 +32,13 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // render > template > el
+  // 如果没有 render 函数， 将 tmeplate | el 编译转化为 render 函数
   if (!options.render) {
     let template = options.template
     if (template) {
       if (typeof template === 'string') {
+        //  如果template是个元素id， 将该id指向元素转化为template
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
           /* istanbul ignore if */
@@ -45,6 +49,7 @@ Vue.prototype.$mount = function (
             )
           }
         }
+        // 如果是个元素
       } else if (template.nodeType) {
         template = template.innerHTML
       } else {
@@ -53,6 +58,7 @@ Vue.prototype.$mount = function (
         }
         return this
       }
+      // 如果传入了el， 获取该el父级元素
     } else if (el) {
       template = getOuterHTML(el)
     }
@@ -62,6 +68,7 @@ Vue.prototype.$mount = function (
         mark('compile')
       }
 
+      // template转化为渲染函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,

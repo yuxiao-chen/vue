@@ -29,11 +29,13 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
+// 初始化生命周期
 export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
   let parent = options.parent
+  // 找到当前组件的最近一个非抽象父级组件
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
@@ -56,7 +58,12 @@ export function initLifecycle (vm: Component) {
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
-  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
+
+    Vue.prototype._update
+    Vue.prototype.$forceUpdate
+    Vue.prototype.$destroy
+    // 更新
+    Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
     const prevVnode = vm._vnode
@@ -87,6 +94,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
+    // 强制更新
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {
@@ -94,6 +102,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 
+  // 销毁
   Vue.prototype.$destroy = function () {
     const vm: Component = this
     if (vm._isBeingDestroyed) {
@@ -138,6 +147,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+// 挂载组件
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -194,6 +204,9 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // watcher的构造函数内会设置vm._watcher
+  // watcher的初始patch可能调用$forceUpdate（例如在子组件的挂载钩子中），
+  // 这依赖于已经定义的vm._watcher
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
@@ -205,6 +218,7 @@ export function mountComponent (
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
+  // 手动挂载的实例，在自挂载上调用挂载在其插入钩子中的呈现创建的子组件
   if (vm.$vnode == null) {
     vm._isMounted = true
     callHook(vm, 'mounted')
@@ -212,6 +226,8 @@ export function mountComponent (
   return vm
 }
 
+
+// 更新子组件
 export function updateChildComponent (
   vm: Component,
   propsData: ?Object,
@@ -225,10 +241,12 @@ export function updateChildComponent (
 
   // determine whether component has slot children
   // we need to do this before overwriting $options._renderChildren.
+  // 在覆盖$options._renderChildren之前，确定组件是否有slot
 
   // check if there are dynamic scopedSlots (hand-written or compiled but with
   // dynamic slot names). Static scoped slots compiled from template has the
   // "$stable" marker.
+  // 检查是否有动态scoped插槽（手工编写或编译，但带有动态插槽名称）。从模板编译的静态作用域插槽具有“$stable”标记。
   const newScopedSlots = parentVnode.data.scopedSlots
   const oldScopedSlots = vm.$scopedSlots
   const hasDynamicScopedSlot = !!(
@@ -240,6 +258,9 @@ export function updateChildComponent (
   // Any static slot children from the parent may have changed during parent's
   // update. Dynamic scoped slots may also have changed. In such cases, a forced
   // update is necessary to ensure correctness.
+  // 父级的任何静态槽子级在父级更新期间可能已更改
+  // 动态范围的插槽也可能已更改
+  // 在这种情况下，必须强制更新以确保正确性
   const needsForceUpdate = !!(
     renderChildren ||               // has new static slots
     vm.$options._renderChildren ||  // has old static slots
@@ -249,6 +270,7 @@ export function updateChildComponent (
   vm.$options._parentVnode = parentVnode
   vm.$vnode = parentVnode // update vm's placeholder node without re-render
 
+  // 更新子树的父级
   if (vm._vnode) { // update child tree's parent
     vm._vnode.parent = parentVnode
   }
@@ -317,6 +339,7 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 停用子组件
 export function deactivateChildComponent (vm: Component, direct?: boolean) {
   if (direct) {
     vm._directInactive = true
@@ -333,8 +356,10 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
+  // #7573调用生命周期钩子时禁用dep collection
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`

@@ -51,14 +51,15 @@ export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component
 }
 
 export function updateListeners (
-  on: Object,
-  oldOn: Object,
-  add: Function,
-  remove: Function,
+  on: Object, // listeners
+  oldOn: Object, // oldListeners
+  add: Function, // target.$on
+  remove: Function, // target.$off
   createOnceHandler: Function,
   vm: Component
 ) {
   let name, def, cur, old, event
+  // 遍历所有监听者
   for (name in on) {
     def = cur = on[name]
     old = oldOn[name]
@@ -68,11 +69,13 @@ export function updateListeners (
       cur = def.handler
       event.params = def.params
     }
+    // 如果事件执行函数不存在
     if (isUndef(cur)) {
       process.env.NODE_ENV !== 'production' && warn(
         `Invalid handler for event "${event.name}": got ` + String(cur),
         vm
       )
+    // 如果没有旧的监听
     } else if (isUndef(old)) {
       if (isUndef(cur.fns)) {
         cur = on[name] = createFnInvoker(cur, vm)

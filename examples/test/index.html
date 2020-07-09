@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="../../dist/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        {{user.job.name}}
+    </div>
+    <script>
+        debugger
+        let vm = new Vue({
+            el: '#app',
+            data: ()=>({
+                user: {
+                    job: {
+                        type: 10086,
+                        name: 'developer'
+                    }
+                }
+            })
+        })
+        /**
+         * new Vue
+         * Vue.prototype._init
+         * 
+         */
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 import Vue from 'core/index'
 import config from 'core/config'
-import { extend, noop } from 'shared/util'
+import { extend, noop } from 'shared/util' // 公用方法
 import { mountComponent } from 'core/instance/lifecycle'
 import { devtools, inBrowser } from 'core/util/index'
 
@@ -27,13 +27,16 @@ Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
-extend(Vue.options.directives, platformDirectives)
-extend(Vue.options.components, platformComponents)
+// 注册 指令 和 组件
+extend(Vue.options.directives, platformDirectives) // v-show v-model
+extend(Vue.options.components, platformComponents) // Transition TransitionGroup
 
 // install platform patch function
+// vdom 的 diff patch 
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
+// 挂在$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
