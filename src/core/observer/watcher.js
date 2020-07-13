@@ -37,7 +37,7 @@ export default class Watcher {
   sync: boolean;
   dirty: boolean;
   active: boolean;
-  deps: Array<Dep>;
+  deps: Array<Dep>; // 收集了本 watcher 的订阅 dep 
   newDeps: Array<Dep>;
   depIds: SimpleSet;
   newDepIds: SimpleSet;
@@ -58,12 +58,13 @@ export default class Watcher {
       vm._watcher = this
     }
 
+    // 在对应组件的 _watchers 中放入自己
     vm._watchers.push(this)
     // options
     if (options) {
       this.deep = !!options.deep
       this.user = !!options.user // 标记是否是框架使用者创建的watch， 而非框架创建的
-      this.lazy = !!options.lazy
+      this.lazy = !!options.lazy // 是否是懒更新
       this.sync = !!options.sync
       this.before = options.before
     } else {
@@ -98,7 +99,7 @@ export default class Watcher {
     }
     this.value = this.lazy
       ? undefined
-      : this.get()
+      : this.get() // 触发一次依赖收集
   }
 
   /**
@@ -133,13 +134,17 @@ export default class Watcher {
 
   /**
    * Add a dependency to this directive.
+   * 添加依赖管理dep
    */
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
+        // 如果没有存储过该dep， 则进行存储
       this.newDepIds.add(id)
       this.newDeps.push(dep)
+      // 判断之前是否曾向dep中添加过本 watcher 
       if (!this.depIds.has(id)) {
+        // 向 dep 中添加本watcher
         dep.addSub(this)
       }
     }
@@ -152,15 +157,19 @@ export default class Watcher {
   cleanupDeps () {
     let i = this.deps.length
     while (i--) {
+        // 从dep中移除本watcher
       const dep = this.deps[i]
       if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this)
       }
     }
+
+    //  新depId 转为老depId 清空新depId
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
     this.newDepIds.clear()
+    // 新dep 换为老dep 新dep清零
     tmp = this.deps
     this.deps = this.newDeps
     this.newDeps = tmp

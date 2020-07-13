@@ -185,11 +185,12 @@ export function defineReactive (
       // 然后调用  obj[key] 以触发本get方法 做 依赖收集
       // 如果本次获取是为了做依赖收集
       if (Dep.target) {
+        // depend: Dep.target.addDep(dep)
         // 依赖收集
         dep.depend()
         // 如果 子属性也有 observe
         if (childOb) {
-        debugger
+        /*子对象进行依赖收集，其实就是将同一个watcher观察者实例放进了两个depend中，一个是正在本身闭包中的depend，另一个是子元素的depend*/
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)

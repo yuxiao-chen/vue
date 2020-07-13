@@ -13,7 +13,7 @@ let uid = 0
  */
 export default class Dep {
   static target: ?Watcher;
-  id: number;
+  id: number; // dep的唯一标识
   subs: Array<Watcher>;
 
   constructor () {
@@ -28,9 +28,10 @@ export default class Dep {
   removeSub (sub: Watcher) {
     remove(this.subs, sub)
   }
-
+  // 往目标 watcher 的 deps 中添加本 dep 
   depend () {
     if (Dep.target) {
+        // addDep会判断 this.id 代表的 dep 是否已添加， 防止重复添加
       Dep.target.addDep(this)
     }
   }
