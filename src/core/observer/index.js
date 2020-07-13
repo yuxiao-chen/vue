@@ -117,6 +117,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * 或者现有的观察者（如果值已经有）
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
+    debugger
     if (!isObject(value) || value instanceof VNode) {
     // 判断是否是对象 或者 vnode
     return
@@ -160,7 +161,7 @@ export function defineReactive (
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
-      // 不可配置
+    // 不可配置
     return
   }
 
@@ -178,19 +179,25 @@ export function defineReactive (
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
+    /** wathcer 初始化是将会触发一次 其对应的更新方法 在被获取是会存储 wathcer 到 Dep.target，即 pushTarget
+     * 然后调用  obj[key] 以触发本get方法 做 依赖收集
+     * get 触发完成后将清除
+     */
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
         
-      // obj[key] 在被获取时会存储wathcer 到 Dep.target， 
-      // 然后调用  obj[key] 以触发本get方法 做 依赖收集
-      // 如果本次获取是为了做依赖收集
+      //
+      // 
+      // 如果本次获取是为了做watcher收集
       if (Dep.target) {
-        // depend: Dep.target.addDep(dep)
         // 依赖收集
-        dep.depend()
-        // 如果 子属性也有 observe
+        dep.depend() // depend: Dep.target.addDep(dep) =》 Watcher.addDep(dep)
+        // 如果 子属性也是对象/数组 且 进行了observe
         if (childOb) {
-        /*子对象进行依赖收集，其实就是将同一个watcher观察者实例放进了两个depend中，一个是正在本身闭包中的depend，另一个是子元素的depend*/
+        /** 子属性进行依赖收集，
+         * 其实就是将同一个watcher观察者实例放进了两个Dep中，
+         * 一个是本属性闭包中的Dep，
+         * 另一个是子属性的Dep（ defineProperty 只劫持一个属性的 get/set， 如果某 watcher 只监听了本属性，但其子属性有是对象/数组， 子属性值变更后也需通知到该 watcher ） */
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)

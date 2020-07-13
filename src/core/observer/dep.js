@@ -10,6 +10,9 @@ let uid = 0
  * A dep is an observable that can have multiple
  * directives subscribing to it.
  * Dep 是可以有多个指令订阅的可观察对象。
+ * 依赖管理器
+ * 收集依赖与某个属性的观察者（watcher）， 
+ * 在该属性发生变更的时候通知这些观察者（进行 update 操作）
  */
 export default class Dep {
   static target: ?Watcher;
@@ -29,6 +32,8 @@ export default class Dep {
     remove(this.subs, sub)
   }
   // 往目标 watcher 的 deps 中添加本 dep 
+  // 在 watcher 的 addDep 方法中被触发
+  // 为避免依赖观察者的重复收集， 会在触发前进行是否曾收集的判断
   depend () {
     if (Dep.target) {
         // addDep会判断 this.id 代表的 dep 是否已添加， 防止重复添加

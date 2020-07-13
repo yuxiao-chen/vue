@@ -52,6 +52,7 @@ export default class Watcher {
     options?: ?Object,
     isRenderWatcher?: boolean
   ) {
+      debugger
     this.vm = vm
     // 是否是对应渲染函数的观察者
     if (isRenderWatcher) {
@@ -107,10 +108,12 @@ export default class Watcher {
    * 计算getter，并重新收集依赖项。
    */
   get () {
+      // 储存本 watcher 
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+        // 触发 value 的获取
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {

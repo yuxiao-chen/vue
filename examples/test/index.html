@@ -8,20 +8,31 @@
 </head>
 <body>
     <div id="app">
-        {{user.job.name}}
+        <p @click="clcikHander">
+            {{user.job.name}}
+        </p>
+        <p>
+            {{user.name}}
+        </p>
     </div>
     <script>
         debugger
         let vm = new Vue({
             el: '#app',
-            data: ()=>({
+            data: () => ({
                 user: {
+                    name: 'ersheng',
                     job: {
                         type: 10086,
                         name: 'developer'
                     }
                 }
-            })
+            }),
+            methods: {
+                clcikHander() {
+                    this.user.job.type++;
+                }
+            },
         })
         /**
          * new Vue
