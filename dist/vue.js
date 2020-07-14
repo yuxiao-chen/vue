@@ -811,6 +811,7 @@
   var prototypeAccessors = { child: { configurable: true } };
 
   // DEPRECATED: alias for componentInstance for backwards compat.
+  // 已弃用：用于向后兼容的组件实例的别名。
   /* istanbul ignore next */
   prototypeAccessors.child.get = function () {
     return this.componentInstance
@@ -835,6 +836,9 @@
   // used for static nodes and slot nodes because they may be reused across
   // multiple renders, cloning them avoids errors when DOM manipulations rely
   // on their elm reference.
+  // 优化浅克隆
+  // 用于静态节点和槽节点，因为它们可以在多个渲染器中重用，
+  // 因此克隆它们可以避免在DOM操作依赖于它们的elm引用时出错
   function cloneVNode (vnode) {
     var cloned = new VNode(
       vnode.tag,
@@ -1005,7 +1009,7 @@
    * 或者现有的观察者（如果值已经有）
    */
   function observe (value, asRootData) {
-      debugger
+      // debugger
       if (!isObject(value) || value instanceof VNode) {
       // 判断是否是对象 或者 vnode
       return
@@ -3394,6 +3398,7 @@
     normalizationType,
     alwaysNormalize
   ) {
+      debugger
     if (Array.isArray(data) || isPrimitive(data)) {
       normalizationType = children;
       children = data;
@@ -3412,6 +3417,7 @@
     children,
     normalizationType
   ) {
+      debugger
     if (isDef(data) && isDef((data).__ob__)) {
        warn(
         "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
@@ -3469,6 +3475,7 @@
           config.parsePlatformTagName(tag), data, children,
           undefined, undefined, context
         );
+      //   resolveAsset 判断组件是否注册
       } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
         // component
         vnode = createComponent(Ctor, data, context, children, tag);
@@ -3566,6 +3573,10 @@
 
   var currentRenderingInstance = null;
 
+  /**
+   * Mixin: $nextTick / _render
+   * @param {*} Vue 
+   */
   function renderMixin (Vue) {
     // install runtime convenience helpers
     installRenderHelpers(Vue.prototype);
@@ -3575,10 +3586,11 @@
     };
 
     Vue.prototype._render = function () {
+        debugger
       var vm = this;
       var ref = vm.$options;
-      var render = ref.render;
-      var _parentVnode = ref._parentVnode;
+        var render = ref.render;
+        var _parentVnode = ref._parentVnode;
 
       if (_parentVnode) {
         vm.$scopedSlots = normalizeScopedSlots(
@@ -3597,8 +3609,10 @@
         // There's no need to maintain a stack because all render fns are called
         // separately from one another. Nested component's render fns are called
         // when parent component is patched.
-        // 不需要维护堆栈，因为所有渲染fn都是彼此独立调用的。当修补父组件时，将调用嵌套组件的render fn。
+        // 不需要维护堆栈，因为所有渲染函数都是彼此独立调用的。
+        // 当 patch 父组件时，将调用嵌套组件的render fn。
         currentRenderingInstance = vm;
+        //  相当于 render(h) 传入createElement;
         vnode = render.call(vm._renderProxy, vm.$createElement);
       } catch (e) {
         handleError(e, vm, "render");
@@ -3619,11 +3633,12 @@
         currentRenderingInstance = null;
       }
       // if the returned array contains only a single node, allow it
-      // 如果返回的数组只包含一个节点，则允许它
+      // 如果返回的数组只包含一个节点，覆盖
       if (Array.isArray(vnode) && vnode.length === 1) {
         vnode = vnode[0];
       }
       // return empty vnode in case the render function errored out
+      // 如果渲染函数出错， 返回一个空节点
       if (!(vnode instanceof VNode)) {
         if ( Array.isArray(vnode)) {
           warn(
@@ -3635,6 +3650,7 @@
         vnode = createEmptyVNode();
       }
       // set parent
+      // 记录父节点
       vnode.parent = _parentVnode;
       return vnode
     };
@@ -3993,35 +4009,38 @@
       Vue.prototype.$destroy;
       // 更新
       Vue.prototype._update = function (vnode, hydrating) {
-      var vm = this;
-      var prevEl = vm.$el;
-      var prevVnode = vm._vnode;
-      var restoreActiveInstance = setActiveInstance(vm);
-      vm._vnode = vnode;
-      // Vue.prototype.__patch__ is injected in entry points
-      // based on the rendering backend used.
-      if (!prevVnode) {
-        // initial render
-        vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
-      } else {
-        // updates
-        vm.$el = vm.__patch__(prevVnode, vnode);
-      }
-      restoreActiveInstance();
-      // update __vue__ reference
-      if (prevEl) {
-        prevEl.__vue__ = null;
-      }
-      if (vm.$el) {
-        vm.$el.__vue__ = vm;
-      }
-      // if parent is an HOC, update its $el as well
-      if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
-        vm.$parent.$el = vm.$el;
-      }
-      // updated hook is called by the scheduler to ensure that children are
-      // updated in a parent's updated hook.
-    };
+          var vm = this;
+          var prevEl = vm.$el;
+          var prevVnode = vm._vnode;
+          var restoreActiveInstance = setActiveInstance(vm);
+          vm._vnode = vnode;
+          // Vue.prototype.__patch__ is injected in entry points
+          // based on the rendering backend used.
+          // __patch__ 声明在 src/platforms/web/runtime/index.js
+          if (!prevVnode) {
+              // initial render
+              // 没有旧数据， 则初始化渲染
+              vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
+          } else {
+              // updates
+              vm.$el = vm.__patch__(prevVnode, vnode);
+          }
+          restoreActiveInstance();
+          // update __vue__ reference
+          if (prevEl) {
+              prevEl.__vue__ = null;
+          }
+          if (vm.$el) {
+              vm.$el.__vue__ = vm;
+          }
+          // if parent is an HOC, update its $el as well
+          if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+              vm.$parent.$el = vm.$el;
+          }
+          // updated hook is called by the scheduler to ensure that children are
+          // updated in a parent's updated hook.
+          // updated 钩子会被 scheduler 调用， 以确保子级在父级的 updated 钩子中得到更新。
+      };
 
       // 强制更新
     Vue.prototype.$forceUpdate = function () {
@@ -4507,7 +4526,7 @@
     options,
     isRenderWatcher
   ) {
-      debugger
+    // debugger
     this.vm = vm;
     // 是否是对应渲染函数的观察者
     if (isRenderWatcher) {
@@ -5119,6 +5138,7 @@
       }
 
       if (vm.$options.el) {
+          debugger
         vm.$mount(vm.$options.el);
       }
     };
@@ -5180,7 +5200,6 @@
     return modified
   }
 
-  debugger
   function Vue (options) {
   debugger
     if (
@@ -5326,6 +5345,7 @@
   function initAssetRegisters (Vue) {
     /**
      * Create asset registration methods.
+     * 声明全局 组件/指令/过滤器
      */
     ASSET_TYPES.forEach(function (type) {
       Vue[type] = function (
@@ -5536,10 +5556,10 @@
     initUse(Vue);
     initMixin$1(Vue);
     initExtend(Vue);
-    initAssetRegisters(Vue);
+    initAssetRegisters(Vue); // 声明全局 组件/指令/过滤器
+
   }
 
-  debugger
   // 初始化全局api
   initGlobalAPI(Vue);
 
@@ -6030,6 +6050,11 @@
         // potential patch errors down the road when it's used as an insertion
         // reference node. Instead, we clone the node on-demand before creating
         // associated DOM element for it.
+        // 这个vnode是在以前的渲染中使用的！
+        // 现在它被用作一个新节点，当它被用作插入引用节点时，
+        // 覆盖它的elm将导致潜在的补丁错误。
+        // 相反，我们先按需克隆节点，然后再为其创建相关的DOM元素。
+        
         vnode = ownerArray[index] = cloneVNode(vnode);
       }
 
@@ -6093,6 +6118,9 @@
         // it should've created a child instance and mounted it. the child
         // component also has set the placeholder vnode's elm.
         // in that case we can just return the element and be done.
+        // 调用init hook之后，如果vnode是子组件
+        // 它应该创建一个子实例并挂载它。子组件还设置了占位符vnode的elm。
+        // 在这种情况下，我们只需返回元素就可以了。
         if (isDef(vnode.componentInstance)) {
           initComponent(vnode, insertedVnodeQueue);
           insert(parentElm, vnode.elm, refElm);
@@ -11997,7 +12025,7 @@
   var shouldDecodeNewlinesForHref = inBrowser ? getShouldDecode(true) : false;
 
   /*  */
-  debugger
+  // debugger
 
   var idToTemplate = cached(function (id) {
     var el = query(id);
@@ -12009,6 +12037,7 @@
     el,
     hydrating
   ) {
+      debugger
     el = el && query(el);
 
     /* istanbul ignore if */

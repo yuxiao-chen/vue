@@ -14,11 +14,23 @@
         <p>
             {{user.name}}
         </p>
+        <comp></comp>
     </div>
     <script>
-        debugger
+        // debugger
         let vm = new Vue({
             el: '#app',
+            components: {
+                comp: { 
+                    template: '<div>自定义组件</div>',
+                    created() {
+                        console.log('created-comp-自定义组件')
+                    },
+                    mounted() {
+                        console.log('mounted-comp-自定义组件')
+                    },
+                }
+            },
             data: () => ({
                 user: {
                     name: 'ersheng',
@@ -28,6 +40,12 @@
                     }
                 }
             }),
+            created() {
+                console.log('created-root')
+            },
+            mounted() {
+                console.log('mounted-root')
+            },
             methods: {
                 clcikHander() {
                     this.user.job.type++;

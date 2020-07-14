@@ -8,7 +8,7 @@ import Vue from './runtime/index'
 import { query } from './util/index'
 import { compileToFunctions } from './compiler/index'
 import { shouldDecodeNewlines, shouldDecodeNewlinesForHref } from './util/compat'
-debugger
+// debugger
 
 const idToTemplate = cached(id => {
   const el = query(id)
@@ -20,6 +20,7 @@ Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+    debugger
   el = el && query(el)
 
   /* istanbul ignore if */

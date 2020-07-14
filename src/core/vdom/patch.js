@@ -137,6 +137,11 @@ export function createPatchFunction (backend) {
       // potential patch errors down the road when it's used as an insertion
       // reference node. Instead, we clone the node on-demand before creating
       // associated DOM element for it.
+      // 这个vnode是在以前的渲染中使用的！
+      // 现在它被用作一个新节点，当它被用作插入引用节点时，
+      // 覆盖它的elm将导致潜在的补丁错误。
+      // 相反，我们先按需克隆节点，然后再为其创建相关的DOM元素。
+      
       vnode = ownerArray[index] = cloneVNode(vnode)
     }
 
@@ -218,6 +223,9 @@ export function createPatchFunction (backend) {
       // it should've created a child instance and mounted it. the child
       // component also has set the placeholder vnode's elm.
       // in that case we can just return the element and be done.
+      // 调用init hook之后，如果vnode是子组件
+      // 它应该创建一个子实例并挂载它。子组件还设置了占位符vnode的elm。
+      // 在这种情况下，我们只需返回元素就可以了。
       if (isDef(vnode.componentInstance)) {
         initComponent(vnode, insertedVnodeQueue)
         insert(parentElm, vnode.elm, refElm)

@@ -62,6 +62,10 @@ export function setCurrentRenderingInstance (vm: Component) {
   currentRenderingInstance = vm
 }
 
+/**
+ * Mixin: $nextTick / _render
+ * @param {*} Vue 
+ */
 export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
   installRenderHelpers(Vue.prototype)
@@ -71,6 +75,7 @@ export function renderMixin (Vue: Class<Component>) {
   }
 
   Vue.prototype._render = function (): VNode {
+      debugger
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
 
@@ -91,8 +96,10 @@ export function renderMixin (Vue: Class<Component>) {
       // There's no need to maintain a stack because all render fns are called
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
-      // 不需要维护堆栈，因为所有渲染fn都是彼此独立调用的。当修补父组件时，将调用嵌套组件的render fn。
+      // 不需要维护堆栈，因为所有渲染函数都是彼此独立调用的。
+      // 当 patch 父组件时，将调用嵌套组件的render fn。
       currentRenderingInstance = vm
+      //  相当于 render(h) 传入createElement;
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)
@@ -113,11 +120,12 @@ export function renderMixin (Vue: Class<Component>) {
       currentRenderingInstance = null
     }
     // if the returned array contains only a single node, allow it
-    // 如果返回的数组只包含一个节点，则允许它
+    // 如果返回的数组只包含一个节点，覆盖
     if (Array.isArray(vnode) && vnode.length === 1) {
       vnode = vnode[0]
     }
     // return empty vnode in case the render function errored out
+    // 如果渲染函数出错， 返回一个空节点
     if (!(vnode instanceof VNode)) {
       if (process.env.NODE_ENV !== 'production' && Array.isArray(vnode)) {
         warn(
@@ -129,6 +137,7 @@ export function renderMixin (Vue: Class<Component>) {
       vnode = createEmptyVNode()
     }
     // set parent
+    // 记录父节点
     vnode.parent = _parentVnode
     return vnode
   }

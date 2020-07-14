@@ -4,7 +4,6 @@ import { renderMixin } from './render'
 import { eventsMixin } from './events'
 import { lifecycleMixin } from './lifecycle'
 import { warn } from '../util/index'
-debugger
 function Vue (options) {
 debugger
   if (process.env.NODE_ENV !== 'production' &&

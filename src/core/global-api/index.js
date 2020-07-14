@@ -65,5 +65,6 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   initUse(Vue)
   initMixin(Vue)
   initExtend(Vue)
-  initAssetRegisters(Vue)
+  initAssetRegisters(Vue) // 声明全局 组件/指令/过滤器
+
 }

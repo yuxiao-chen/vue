@@ -117,7 +117,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * 或者现有的观察者（如果值已经有）
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
-    debugger
+    // debugger
     if (!isObject(value) || value instanceof VNode) {
     // 判断是否是对象 或者 vnode
     return

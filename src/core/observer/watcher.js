@@ -52,7 +52,7 @@ export default class Watcher {
     options?: ?Object,
     isRenderWatcher?: boolean
   ) {
-      debugger
+    //   debugger
     this.vm = vm
     // 是否是对应渲染函数的观察者
     if (isRenderWatcher) {
