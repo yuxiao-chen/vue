@@ -10,7 +10,7 @@ export default class VNode {
   context: Component | void; // 当前组件节点对应的Vue实例 rendered in this component's scope
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
-  componentInstance: Component | void; // vm component instance
+  componentInstance: Component | void; // 当前节点对应组件的实例 vm component instance
   parent: VNode | void; // 父级节点 component placeholder node
 
   // strictly internal
@@ -19,7 +19,7 @@ export default class VNode {
   isRootInsert: boolean; // 是否根节点 necessary for enter transition check
   isComment: boolean; // 是否是注释 empty comment placeholder?
   isCloned: boolean; // 是否是克隆节点 is a cloned node?
-  isOnce: boolean; // 是否只渲染一次 is a v-once node?
+  isOnce: boolean; // 是否包含 v-once 指令 is a v-once node?
   asyncFactory: Function | void; // 异步组件函数 async component factory function
   asyncMeta: Object | void; 
   isAsyncPlaceholder: boolean;

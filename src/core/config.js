@@ -108,6 +108,7 @@ export default ({
 
   /**
    * Parse the real tag name for the specific platform.
+   * 解析具体平台的实际标签名
    */
   parsePlatformTagName: identity,
 

@@ -127,7 +127,7 @@ export function createPatchFunction (backend) {
     insertedVnodeQueue,
     parentElm,
     refElm,
-    nested,
+    nested, // 是否是嵌套
     ownerArray,
     index
   ) {
@@ -137,9 +137,9 @@ export function createPatchFunction (backend) {
       // potential patch errors down the road when it's used as an insertion
       // reference node. Instead, we clone the node on-demand before creating
       // associated DOM element for it.
-      // 这个vnode是在以前的渲染中使用的！
+      // 这个 vnode 是在以前的渲染中使用的！
       // 现在它被用作一个新节点，当它被用作插入引用节点时，
-      // 覆盖它的elm将导致潜在的补丁错误。
+      // 覆盖它的 elm 将导致潜在的补丁错误。
       // 相反，我们先按需克隆节点，然后再为其创建相关的DOM元素。
       
       vnode = ownerArray[index] = cloneVNode(vnode)
@@ -598,9 +598,14 @@ export function createPatchFunction (backend) {
   // are already rendered on the client or has no need for initialization
   // Note: style is excluded because it relies on initial clone for future
   // deep updates (#7063).
+  // 在 hydrate 过程中可以跳过createhook的模块列表，因为它们已经在客户端上呈现或者不需要初始化
+  // 注意：样式被排除在外，因为它将来依赖于初始克隆
+  // 深度更新（#7063）。
   const isRenderedModule = makeMap('attrs,class,staticClass,staticStyle,key')
 
   // Note: this is a browser-only function so we can assume elms are DOM nodes.
+  // 注意：这是一个只用于浏览器的函数，因此我们可以假设elm是DOM节点。
+  // “注水”激活 
   function hydrate (elm, vnode, insertedVnodeQueue, inVPre) {
     let i
     const { tag, data, children } = vnode
@@ -621,17 +626,23 @@ export function createPatchFunction (backend) {
       if (isDef(i = data.hook) && isDef(i = i.init)) i(vnode, true /* hydrating */)
       if (isDef(i = vnode.componentInstance)) {
         // child component. it should have hydrated its own tree.
+        // 子组件 它应该激活自身树结构
         initComponent(vnode, insertedVnodeQueue)
         return true
       }
     }
     if (isDef(tag)) {
+        // 如果新 vnode 有子元素
       if (isDef(children)) {
         // empty element, allow client to pick up and populate children
+        // 空元素，允许客户端获取并填充子元素
+        // 如果旧元素没有子元素
         if (!elm.hasChildNodes()) {
+            // 创建子元素
           createChildren(vnode, children, insertedVnodeQueue)
         } else {
           // v-html and domProps: innerHTML
+          // 如果 有v-html  data.domProps.innerHTML
           if (isDef(i = data) && isDef(i = i.domProps) && isDef(i = i.innerHTML)) {
             if (i !== elm.innerHTML) {
               /* istanbul ignore if */
@@ -648,6 +659,7 @@ export function createPatchFunction (backend) {
             }
           } else {
             // iterate and compare children lists
+            // 迭代和比较子列表
             let childrenMatch = true
             let childNode = elm.firstChild
             for (let i = 0; i < children.length; i++) {
@@ -659,6 +671,7 @@ export function createPatchFunction (backend) {
             }
             // if childNode is not null, it means the actual childNodes list is
             // longer than the virtual children list.
+            // 如果 childNode 不为 null ，则表示实际 childNodes 列表比虚拟子节点列表长。
             if (!childrenMatch || childNode) {
               /* istanbul ignore if */
               if (process.env.NODE_ENV !== 'production' &&
@@ -694,6 +707,7 @@ export function createPatchFunction (backend) {
     return true
   }
 
+  // 节点匹配断言 
   function assertNodeMatch (node, vnode, inVPre) {
     if (isDef(vnode.tag)) {
       return vnode.tag.indexOf('vue-component') === 0 || (
@@ -714,29 +728,43 @@ export function createPatchFunction (backend) {
     let isInitialPatch = false
     const insertedVnodeQueue = []
 
+    // 如果是初始化 —— 没有旧vnode
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
+      // 空挂载（可能是组件），创建新的根元素
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
-      const isRealElement = isDef(oldVnode.nodeType)
-      if (!isRealElement && sameVnode(oldVnode, vnode)) {
+    // 做更新操作
+    
+      const isRealElement = isDef(oldVnode.nodeType) // 排除服务端渲染的情况 ？
+      // 非真是元素 并且 新老元素同样
+      if (!isRealElement && sameVnode(oldVnode, vnode)) { 
         // patch existing root node
+        // patch 已创建的根节点
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
+          // 如果是真实元素 但是新老元素不同
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // 挂载到真实元素上
+          // 检查这是否是服务端渲染的内容，以及我们是否可以成功执行合并
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
+            //   移除服务端渲染的标记
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
           }
           if (isTrue(hydrating)) {
+              // “注水” 成功
             if (hydrate(oldVnode, vnode, insertedVnodeQueue)) {
               invokeInsertHook(vnode, insertedVnodeQueue, true)
               return oldVnode
             } else if (process.env.NODE_ENV !== 'production') {
+                // 客户端呈现的虚拟DOM树与服务器呈现的内容不匹配
+                // 这可能是由不正确的HTML标记引起的，例如在<p>中嵌套块级元素，或缺少<tbody>
+                // 放弃 ’注水‘ 和执行全面的客户端渲染
               warn(
                 'The client-side rendered virtual DOM tree is not matching ' +
                 'server-rendered content. This is likely caused by incorrect ' +
@@ -748,10 +776,13 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // 不是服务器渲染，就是 “注水” 失败。
+            // 创建一个空节点并替换它
           oldVnode = emptyNodeAt(oldVnode)
         }
 
         // replacing existing element
+        // 替换现有元素
         const oldElm = oldVnode.elm
         const parentElm = nodeOps.parentNode(oldElm)
 
@@ -762,6 +793,7 @@ export function createPatchFunction (backend) {
           // extremely rare edge case: do not insert if old element is in a
           // leaving transition. Only happens when combining transition +
           // keep-alive + HOCs. (#4590)
+          // 极罕见的边缘情况：如果旧元素处于离开转换，则不要插入。只有在组合使用transition+keep alive+HOCs时才会发生。（4590）
           oldElm._leaveCb ? null : parentElm,
           nodeOps.nextSibling(oldElm)
         )
@@ -797,6 +829,7 @@ export function createPatchFunction (backend) {
         }
 
         // destroy old node
+        // 移除旧节点
         if (isDef(parentElm)) {
           removeVnodes([oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {
